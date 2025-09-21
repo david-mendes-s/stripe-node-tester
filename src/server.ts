@@ -1,10 +1,14 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
-import router from './routes/router';
+import cookieParser from 'cookie-parser';
+import router from './routes/index';
 
 export const app = express();
 
 app.use(express.json());
-
+app.use(cookieParser());
 // Chamada para Rotas
 app.use(router);
 
