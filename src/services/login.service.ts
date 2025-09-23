@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import bcript from 'bcrypt';
-import { jwtSecret } from '../config/auth.config';
-import { db } from '../db/db';
+import { jwtSecret } from '../config/auth.config.js';
+import { db } from '../db/db.js';
 
 interface ILogin {
   email: string;

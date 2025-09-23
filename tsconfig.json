@@ -5,10 +5,9 @@
       "es2020",
       "dom"
     ],
-    "allowJs": true,
-    "module": "esnext", // ou "esnext"
+    "module": "nodenext",
+    "moduleResolution": "nodenext", // ou "esnext"
     "resolveJsonModule": true,
-    "moduleResolution": "node",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,

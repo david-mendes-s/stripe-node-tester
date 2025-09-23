@@ -1,4 +1,4 @@
-import { db } from '../db/db';
+import { db } from '../db/db.js';
 import { v4 as uuidv4 } from 'uuid';
 import bcript from 'bcrypt';
 
@@ -18,7 +18,7 @@ class UserService {
   static async getAll() {
     const users = db.read();
 
-    const usersJson = users.map((user) => ({
+    const usersJson = users.map((user: any) => ({
       id: user.id,
       name: user.name,
       email: user.email,

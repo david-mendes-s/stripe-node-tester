@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { jwtSecret } from '../config/auth.config';
+import { jwtSecret } from '../config/auth.config.js';
 
 interface AuthRequest extends Request {
   user?: { id: string; username: string }; // Tipo para o usuário decodificado

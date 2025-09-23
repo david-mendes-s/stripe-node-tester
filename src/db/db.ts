@@ -1,5 +1,5 @@
-import User from '../models/user.model';
-import { IDatabase } from './database.interface';
+import User from '../models/user.model.js';
+import { IDatabase } from './database.interface.js';
 
 export class InMemoryDatabase implements IDatabase {
   private static instance: InMemoryDatabase | null = null;

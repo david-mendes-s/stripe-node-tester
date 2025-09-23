@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { db } from '../db/db';
-import UserService from '../services/user.service';
+import { db } from '../db/db.js';
+import UserService from '../services/user.service.js';
 
 class UserController {
   static async createUser(req: Request, res: Response) {

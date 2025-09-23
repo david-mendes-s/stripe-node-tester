@@ -3,7 +3,7 @@ dotenv.config();
 
 import express from 'express';
 import cookieParser from 'cookie-parser';
-import router from './routes/index';
+import router from './routes/index.js';
 
 export const app = express();
 

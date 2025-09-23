@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { jwtSecret } from '../config/auth.config';
+import { jwtSecret } from '../config/auth.config.js';
 
 class RefreshController {
   static async refreshAccessToken(req: Request, res: Response) {
