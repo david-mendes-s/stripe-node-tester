@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsx watch --require dotenv/config src/server.ts",
     "build": "tsc",
-    "start": "cross-env NODE_ENV=production --experimental-specifier-resolution=node dist/server.js",
+    "start": "cross-env NODE_ENV=production node --experimental-specifier-resolution=node dist/server.js",
     "lint": "eslint \"src/**/*.{ts,js}\" --fix",
     "format": "prettier --write \"src/**/*.{ts,js}\""
   },
