@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch --require dotenv/config src/server.ts",
-    "build": "tsc",
+    "build": "esbuild src/server.ts --bundle --platform=node --target=es2020 --outfile=dist/server.js --format=esm",
     "start": "cross-env NODE_ENV=production node --experimental-specifier-resolution=node dist/server.js",
     "lint": "eslint \"src/**/*.{ts,js}\" --fix",
     "format": "prettier --write \"src/**/*.{ts,js}\""
@@ -32,11 +32,12 @@
     "@typescript-eslint/eslint-plugin": "^8.44.0",
     "@typescript-eslint/parser": "^8.44.0",
     "cross-env": "^10.0.0",
+    "esbuild": "^0.25.10",
     "eslint": "^9.36.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-prettier": "^5.5.4",
     "prettier": "^3.6.2",
+    "tsc-alias": "^1.8.16",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.44.0"
