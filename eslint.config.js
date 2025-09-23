@@ -46,6 +46,16 @@ export default tseslint.config(
             // Exemplo: Desabilita a regra `no-unused-vars` do ESLint padrão,
             // pois o plugin `ts-eslint` já tem a sua própria, mais precisa.
             'no-unused-vars': 'off',
+            "import/extensions": [
+                "error",
+                "ignorePackages",
+                {
+                    "js": "never",
+                    "jsx": "never",
+                    "ts": "never",
+                    "tsx": "never"
+                }
+            ]
         },
     },
 

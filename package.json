@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsx watch --require dotenv/config src/server.ts",
     "build": "tsc",
-    "start": "cross-env NODE_ENV=production node dist/server.js",
+    "start": "cross-env NODE_ENV=production --experimental-specifier-resolution=node dist/server.js",
     "lint": "eslint \"src/**/*.{ts,js}\" --fix",
     "format": "prettier --write \"src/**/*.{ts,js}\""
   },
@@ -34,6 +34,7 @@
     "cross-env": "^10.0.0",
     "eslint": "^9.36.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-prettier": "^5.5.4",
     "prettier": "^3.6.2",
     "tsx": "^4.20.5",
