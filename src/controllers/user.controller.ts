@@ -3,7 +3,13 @@ import { db } from '../db/db.js';
 import UserService from '../services/user.service.js';
 
 class UserController {
-  static async createUser(req: Request, res: Response) {
+  private userService: UserService;
+
+  constructor(userService: UserService) {
+    this.userService = userService;
+  }
+
+  createUser = async (req: Request, res: Response) => {
     try {
       const { name, email, password } = req.body;
 
@@ -18,7 +24,7 @@ class UserController {
         return res.sendStatus(409);
       }
 
-      const user = await UserService.createUser({ name, email, password });
+      const user = await this.userService.createUser({ name, email, password });
 
       return res.status(201).json(user);
     } catch (error) {
@@ -26,11 +32,11 @@ class UserController {
         error instanceof Error ? error.message : 'Erro interno do servidor';
       return res.status(500).json({ error: errorMessage });
     }
-  }
+  };
 
-  static async getUsers(req: Request, res: Response) {
+  getUsers = async (req: Request, res: Response) => {
     try {
-      const users = await UserService.getAll();
+      const users = await this.userService.getAll();
 
       return res.status(200).json(users);
     } catch (error) {
@@ -38,7 +44,7 @@ class UserController {
         error instanceof Error ? error.message : 'Erro interno do servidor';
       return res.status(500).json({ error: errorMessage });
     }
-  }
+  };
 }
 
 export default UserController;

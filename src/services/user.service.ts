@@ -1,6 +1,6 @@
-import { db } from '../db/db.js';
 import { v4 as uuidv4 } from 'uuid';
 import bcript from 'bcrypt';
+import { IUserRepository } from '../repositories/user.repository.interface.js';
 
 interface IUserService {
   name: string;
@@ -9,15 +9,27 @@ interface IUserService {
 }
 
 class UserService {
-  static async createUser({ name, email, password }: IUserService) {
-    const hashPassword = await bcript.hash(password, 10);
+  private userRepository: IUserRepository;
 
-    await db.create({ id: uuidv4(), name, email, password: hashPassword });
+  constructor(userRepository: IUserRepository) {
+    this.userRepository = userRepository;
   }
 
-  static async getAll() {
-    const users = db.read();
+  async createUser({ name, email, password }: IUserService) {
+    const hashPassword = await bcript.hash(password, 10);
 
+    await this.userRepository.create({
+      id: uuidv4(),
+      name,
+      email,
+      password: hashPassword,
+    });
+  }
+
+  async getAll() {
+    const users = this.userRepository.read();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const usersJson = users.map((user: any) => ({
       id: user.id,
       name: user.name,

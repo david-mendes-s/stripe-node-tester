@@ -1,7 +1,7 @@
 import User from '../models/user.model.js';
-import { IDatabase } from './database.interface.js';
+import { IUserRepository } from '../repositories/user.repository.interface.js';
 
-export class InMemoryDatabase implements IDatabase {
+export class InMemoryDatabase implements IUserRepository {
   private static instance: InMemoryDatabase | null = null;
   private data: User[] = [];
 
@@ -31,4 +31,4 @@ export class InMemoryDatabase implements IDatabase {
   }
 }
 
-export const db: IDatabase = InMemoryDatabase.getInstance();
+export const db = InMemoryDatabase.getInstance();

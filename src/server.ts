@@ -9,6 +9,7 @@ export const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
+
 // Chamada para Rotas
 app.use(router);
 
