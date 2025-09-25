@@ -1,7 +1,10 @@
+// src/routes/usersRouter.ts
 import { Router } from 'express';
 import { authenticateToken } from '../middleware/auth.js';
 
-import { db } from '../db/db.js'; // Garantir que o banco de dados seja inicializado
+import { prisma } from '../db/db.postgresql.js';
+import { userSchema } from '../validations/user.validation.js';
+import { validate } from '../middleware/validations.js';
 
 import UserController from '../controllers/user.controller.js';
 import UserService from '../services/user.service.js';
@@ -9,13 +12,21 @@ import UserRepository from '../repositories/user.repositoy.js';
 
 const usersRouter = Router();
 
-// injeta o db no repository
-const userRepository = new UserRepository(db);
+// Injeta o Prisma no repositório
+const userRepository = new UserRepository(prisma);
 const userService = new UserService(userRepository);
 const userController = new UserController(userService);
 
-usersRouter.get('/', authenticateToken, userController.getUsers);
+// Use a arrow function para manter o contexto "this"
+usersRouter.get('/', authenticateToken, (req, res) =>
+  userController.getUsers(req, res),
+);
+usersRouter.post('/', validate(userSchema), (req, res) =>
+  userController.createUser(req, res),
+);
 
-usersRouter.post('/', userController.createUser);
+usersRouter.put('/', authenticateToken, (req, res) =>
+  userController.updateUser(req, res),
+);
 
 export default usersRouter;

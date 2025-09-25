@@ -5,4 +5,10 @@ interface User {
   password: string;
 }
 
+export interface UserWithoutPassword {
+  id: string;
+  name: string;
+  email: string;
+}
+
 export default User;

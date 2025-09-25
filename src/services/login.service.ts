@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
-import bcript from 'bcrypt';
+import bcrypt from 'bcrypt';
 import { jwtSecret } from '../config/auth.config.js';
-import { db } from '../db/db.js';
+import { IUserRepository } from '../repositories/user.repository.interface.js';
 
 interface ILogin {
   email: string;
@@ -9,17 +9,14 @@ interface ILogin {
 }
 
 class LoginService {
-  static async login({ email, password }: ILogin) {
-    const user = await db.filterUser(email);
+  // eslint-disable-next-line prettier/prettier
+  constructor(private userRepository: IUserRepository) { }
 
-    if (!user) {
-      throw new Error('User not found');
-    }
+  async login({ email, password }: ILogin) {
+    const user = await this.userRepository.findByEmail(email);
 
-    const match = await bcript.compare(password, user.password);
-
-    if (!match) {
-      throw new Error('Invalid password');
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      throw new Error('Email ou senha inválidos.');
     }
 
     // Gera o Token de Acesso (curta duração)

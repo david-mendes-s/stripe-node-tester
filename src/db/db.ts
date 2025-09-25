@@ -1,7 +1,6 @@
 import User from '../models/user.model.js';
-import { IUserRepository } from '../repositories/user.repository.interface.js';
 
-export class InMemoryDatabase implements IUserRepository {
+export class InMemoryDatabase {
   private static instance: InMemoryDatabase | null = null;
   private data: User[] = [];
 

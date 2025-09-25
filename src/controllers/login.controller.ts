@@ -1,12 +1,15 @@
 import { Request, Response } from 'express';
-import LoginService from '../services/login.service.js';
+import { ILoginService } from '../services/login.service.interface.js';
 
 class LoginController {
-  static async createLogin(req: Request, res: Response) {
+  // eslint-disable-next-line prettier/prettier
+  constructor(private loginService: ILoginService) { }
+
+  async createLogin(req: Request, res: Response) {
     try {
       const { email, password } = req.body;
 
-      const { accessToken, refreshToken } = await LoginService.login({
+      const { accessToken, refreshToken } = await this.loginService.login({
         email,
         password,
       });

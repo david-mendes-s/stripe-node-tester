@@ -1,42 +1,50 @@
 import { v4 as uuidv4 } from 'uuid';
-import bcript from 'bcrypt';
+import bcrypt from 'bcrypt';
 import { IUserRepository } from '../repositories/user.repository.interface.js';
+import { IUserService } from './user.service.interface.js';
+import User from '../models/user.model.js';
 
-interface IUserService {
-  name: string;
-  email: string;
-  password: string;
-}
+class UserService implements IUserService {
+  // eslint-disable-next-line prettier/prettier
+  constructor(private userRepository: IUserRepository) { }
 
-class UserService {
-  private userRepository: IUserRepository;
+  async createUser({ name, email, password }: Omit<User, 'id'>) {
+    const existingUser = await this.userRepository.findByEmail(email);
+    if (existingUser) {
+      throw new Error('Usuário com este email já existe.');
+    }
 
-  constructor(userRepository: IUserRepository) {
-    this.userRepository = userRepository;
-  }
+    const id = uuidv4();
+    const hashPassword = await bcrypt.hash(password, 10);
 
-  async createUser({ name, email, password }: IUserService) {
-    const hashPassword = await bcript.hash(password, 10);
-
-    await this.userRepository.create({
-      id: uuidv4(),
+    const newUser = {
+      id,
       name,
       email,
       password: hashPassword,
-    });
+    };
+
+    await this.userRepository.create(newUser);
   }
 
   async getAll() {
-    const users = this.userRepository.read();
+    const users = await this.userRepository.readAll();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const usersJson = users.map((user: any) => ({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-    }));
+    return users;
+  }
 
-    return usersJson;
+  async updateUser(id: string, userData: Partial<Omit<User, 'id'>>) {
+    if (userData.password) {
+      userData.password = await bcrypt.hash(userData.password, 10);
+    }
+
+    const updatedUser = await this.userRepository.upadte(id, userData);
+
+    if (!updatedUser) {
+      throw new Error('Usuário não encontrado ou sem permissão');
+    }
+
+    return updatedUser;
   }
 }
 

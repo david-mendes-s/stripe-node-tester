@@ -1,23 +1,49 @@
-import User from '../models/user.model.js';
+import { PrismaClient } from '@prisma/client';
+import User, { UserWithoutPassword } from '../models/user.model.js';
 import { IUserRepository } from './user.repository.interface.js';
 
 class UserRepository implements IUserRepository {
-  private db: IUserRepository;
+  // eslint-disable-next-line prettier/prettier
+  constructor(private prisma: PrismaClient) { }
 
-  constructor(db: IUserRepository) {
-    this.db = db;
+
+  async create(user: User): Promise<User> {
+    return await this.prisma.user.create({ data: user });
   }
 
-  create(user: User): void {
-    this.db.create(user);
+  async readAll(): Promise<UserWithoutPassword[]> {
+    return await this.prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
   }
 
-  read(): User[] {
-    return this.db.read();
+  async findByEmail(email: string): Promise<User | null> {
+    return await this.prisma.user.findUnique({
+      where: { email },
+    });
   }
 
-  filterUser(email: string): User | null {
-    return this.db.filterUser(email);
+  async upadte(
+    id: string,
+    user: Partial<Omit<User, 'id'>>,
+  ): Promise<UserWithoutPassword | null> {
+    const existingUser = await this.prisma.user.findUnique({
+      where: { id: id },
+    });
+
+    if (!existingUser) {
+      throw new Error('Usuário não encontrado ou sem permissão');
+    }
+
+    return await this.prisma.user.update({
+      where: { id },
+      data: user,
+      select: { id: true, name: true, email: true },
+    });
   }
 }
 
