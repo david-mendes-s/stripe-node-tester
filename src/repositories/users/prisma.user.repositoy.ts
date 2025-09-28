@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import User, { UserWithoutPassword } from '../models/user.model.js';
+import User, { UserWithoutPassword } from '../../models/user.model.js';
 import { IUserRepository } from './user.repository.interface.js';
 
 class UserRepository implements IUserRepository {
@@ -27,7 +27,7 @@ class UserRepository implements IUserRepository {
     });
   }
 
-  async upadte(
+  async update(
     id: string,
     user: Partial<Omit<User, 'id'>>,
   ): Promise<UserWithoutPassword | null> {

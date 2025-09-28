@@ -1,4 +1,4 @@
-import User, { UserWithoutPassword } from '../models/user.model.js';
+import User, { UserWithoutPassword } from '../../models/user.model.js';
 
 export interface IUserRepository {
   create(user: Omit<User, 'id'>): Promise<User>;
@@ -7,7 +7,7 @@ export interface IUserRepository {
 
   findByEmail(email: string): Promise<User | null>;
 
-  upadte(
+  update(
     id: string,
     user: Partial<Omit<User, 'id'>>,
   ): Promise<UserWithoutPassword | null>;

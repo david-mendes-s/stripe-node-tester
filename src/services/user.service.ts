@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import bcrypt from 'bcrypt';
-import { IUserRepository } from '../repositories/user.repository.interface.js';
+import { IUserRepository } from '../repositories/users/user.repository.interface.js';
 import { IUserService } from './user.service.interface.js';
 import User from '../models/user.model.js';
 
@@ -25,6 +25,8 @@ class UserService implements IUserService {
     };
 
     await this.userRepository.create(newUser);
+
+    return newUser;
   }
 
   async getAll() {
@@ -38,7 +40,7 @@ class UserService implements IUserService {
       userData.password = await bcrypt.hash(userData.password, 10);
     }
 
-    const updatedUser = await this.userRepository.upadte(id, userData);
+    const updatedUser = await this.userRepository.update(id, userData);
 
     if (!updatedUser) {
       throw new Error('Usuário não encontrado ou sem permissão');

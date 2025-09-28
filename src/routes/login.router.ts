@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../db/db.postgresql.js'; // Importa a instância do Prisma
-import UserRepository from '../repositories/user.repositoy.js';
+import UserRepository from '../repositories/users/prisma.user.repositoy.js';
 import LoginService from '../services/login.service.js';
 import LoginController from '../controllers/login.controller.js';
 

@@ -8,12 +8,12 @@ import { validate } from '../middleware/validations.js';
 
 import UserController from '../controllers/user.controller.js';
 import UserService from '../services/user.service.js';
-import UserRepository from '../repositories/user.repositoy.js';
+import PrismaUserRepository from '../repositories/users/prisma.user.repositoy.js';
 
 const usersRouter = Router();
 
 // Injeta o Prisma no repositório
-const userRepository = new UserRepository(prisma);
+const userRepository = new PrismaUserRepository(prisma);
 const userService = new UserService(userRepository);
 const userController = new UserController(userService);
 
