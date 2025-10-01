@@ -15,12 +15,13 @@ export async function setupTestDB() {
 
   // 1. Inicia o contêiner
   container = await new PostgreSqlContainer('postgres:16-alpine')
-    .withExposedPorts(5432)
+    .withExposedPorts(container?.getMappedPort(5432) || 5432)
     .start();
 
   // 2. Obtém a URL de conexão dinâmica
   // O Testcontainers cuida de criar um banco de dados temporário com credenciais
   testDatabaseUrl = container.getConnectionUri();
+  console.log('🟢 Contêiner iniciado. URL do banco de teste:', testDatabaseUrl);
 
   // 3. Executa as migrações do Prisma (usando a URL do banco de testes)
   // Usar 'migrate deploy' é o ideal para testes
