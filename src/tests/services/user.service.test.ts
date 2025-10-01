@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
-import { db } from "../repositories/users/memory.user.repository.js";
-import UserService from "../services/user.service.js";
-import { IUserService } from "../services/user.service.interface.js";
+import { db } from '../../repositories/users/memory.user.repository.js';
+import UserService from '../../services/user.service.js';
+import { IUserService } from '../../services/user.service.interface.js';
 
 jest.mock('uuid', () => {
   return {
@@ -10,7 +10,6 @@ jest.mock('uuid', () => {
 });
 
 describe('Create User', () => {
-
   let userService: IUserService;
 
   beforeAll(() => {
@@ -23,7 +22,6 @@ describe('Create User', () => {
   });
 
   it('should create a new user with encrypted password', async () => {
-
     const user = {
       name: 'John Doe',
       email: 'david@gmail.com',
@@ -45,7 +43,6 @@ describe('Create User', () => {
   });
 
   it('should throw an error if user email already exists', async () => {
-
     const user = {
       name: 'John Doe',
       email: 'david1@gmail.com',
@@ -55,15 +52,13 @@ describe('Create User', () => {
     await userService.createUser(user); // primeiro cadastro
 
     // Segundo cadastro com mesmo email deve falhar
-    await expect(userService.createUser(user))
-      .rejects
-      .toEqual(new Error('Usuário com este email já existe.'));
-
+    await expect(userService.createUser(user)).rejects.toEqual(
+      new Error('Usuário com este email já existe.'),
+    );
   });
 });
 
 describe('Update User', () => {
-
   let userService: IUserService;
 
   beforeAll(() => {
@@ -91,7 +86,10 @@ describe('Update User', () => {
       email: 'john.updated@example.com',
     };
 
-    const updatedUser = await userService.updateUser(createdUser.id, updateData);
+    const updatedUser = await userService.updateUser(
+      createdUser.id,
+      updateData,
+    );
 
     expect(updatedUser).toHaveProperty('id', createdUser.id);
     expect(updatedUser?.name).toBe(updateData.name);
@@ -116,7 +114,10 @@ describe('Update User', () => {
       password: newPassword,
     };
 
-    const updatedUser = await userService.updateUser(createdUser.id, updateData);
+    const updatedUser = await userService.updateUser(
+      createdUser.id,
+      updateData,
+    );
 
     expect(updatedUser).toHaveProperty('id', createdUser.id);
     expect(updatedUser?.name).toBe(user.name);
@@ -126,8 +127,8 @@ describe('Update User', () => {
 
     // Verify the password was encrypted by checking the stored user
     const storedUser = await userService.getAll();
-    const userWithPassword = storedUser.find(u => u.id === createdUser.id);
-    
+    const userWithPassword = storedUser.find((u) => u.id === createdUser.id);
+
     // The password should be encrypted (different from the original)
     expect(userWithPassword).toBeDefined();
   });
@@ -140,9 +141,9 @@ describe('Update User', () => {
 
     const nonExistentId = 'non-existent-id';
 
-    await expect(userService.updateUser(nonExistentId, updateData))
-      .rejects
-      .toEqual(new Error('Usuário não encontrado ou sem permissão'));
+    await expect(
+      userService.updateUser(nonExistentId, updateData),
+    ).rejects.toEqual(new Error('Usuário não encontrado ou sem permissão'));
   });
 
   it('should update only provided fields (partial update)', async () => {
@@ -160,7 +161,10 @@ describe('Update User', () => {
       name: 'John Updated Name Only',
     };
 
-    const updatedUser = await userService.updateUser(createdUser.id, updateData);
+    const updatedUser = await userService.updateUser(
+      createdUser.id,
+      updateData,
+    );
 
     expect(updatedUser).toHaveProperty('id', createdUser.id);
     expect(updatedUser?.name).toBe(updateData.name);
@@ -184,7 +188,10 @@ describe('Update User', () => {
       password: 'completelynewpassword789',
     };
 
-    const updatedUser = await userService.updateUser(createdUser.id, updateData);
+    const updatedUser = await userService.updateUser(
+      createdUser.id,
+      updateData,
+    );
 
     expect(updatedUser).toHaveProperty('id', createdUser.id);
     expect(updatedUser?.name).toBe(updateData.name);

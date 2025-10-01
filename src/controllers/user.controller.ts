@@ -3,6 +3,13 @@
 import { Request, Response } from 'express';
 import { IUserService } from '../services/user.service.interface.js'; // Use a interface do serviço
 
+export interface AuthRequest extends Request {
+  user: {
+    id: string;
+    username: string;
+  };
+}
+
 class UserController {
   // eslint-disable-next-line prettier/prettier
   constructor(private userService: IUserService) { }
@@ -21,7 +28,11 @@ class UserController {
       // Chama o serviço, que é responsável por toda a lógica de negócio
       const user = await this.userService.createUser({ name, email, password });
 
-      return res.status(201).json(user);
+      return res.status(201).json({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      });
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Erro interno do servidor';
@@ -43,7 +54,7 @@ class UserController {
     }
   };
 
-  updateUser = async (req: Request, res: Response) => {
+  updateUser = async (req: AuthRequest, res: Response) => {
     try {
       const id = req.user.id;
 

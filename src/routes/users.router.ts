@@ -6,7 +6,7 @@ import { prisma } from '../db/db.postgresql.js';
 import { userSchema } from '../validations/user.validation.js';
 import { validate } from '../middleware/validations.js';
 
-import UserController from '../controllers/user.controller.js';
+import UserController, { AuthRequest } from '../controllers/user.controller.js';
 import UserService from '../services/user.service.js';
 import PrismaUserRepository from '../repositories/users/prisma.user.repositoy.js';
 
@@ -26,7 +26,7 @@ usersRouter.post('/', validate(userSchema), (req, res) =>
 );
 
 usersRouter.put('/', authenticateToken, (req, res) =>
-  userController.updateUser(req, res),
+  userController.updateUser(req as AuthRequest, res),
 );
 
 export default usersRouter;

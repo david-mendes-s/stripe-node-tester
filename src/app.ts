@@ -4,7 +4,6 @@ dotenv.config();
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import router from './routes/index.js';
-import e from 'express';
 
 export const app = express();
 
