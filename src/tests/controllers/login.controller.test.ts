@@ -79,7 +79,7 @@ afterAll(async () => {
   await teardownTestDB();
 });
 
-describe('Create User Controller', () => {
+describe('Login Controller', () => {
   beforeEach(async () => {
     // ATENÇÃO: Use 'testPrismaClient' para a limpeza do banco de dados.
     // Trunca todas as tabelas para garantir um estado limpo
@@ -88,51 +88,54 @@ describe('Create User Controller', () => {
     );
   });
 
-  it('created user with router post and verifies data', async () => {
+  it('should return 200, an access token, and set a refresh token cookie', async () => {
+    // 1. Cria o usuário (Passo necessário para o login)
+    await request(app)
+      .post('/users')
+      .send({ name: 'test', email: 'test@test.com', password: '123456' })
+      .expect(201);
+
+    // 2. Tenta o Login e armazena a resposta
     const response = await request(app)
-      .post('/users')
-      .send({ name: 'David', email: 'david1@gmail.com', password: 'qwe123' })
-      .expect(201);
+      .post('/login')
+      .send({ email: 'test@test.com', password: '123456' })
+      .expect(200); // 1. Verifica o status HTTP
 
-    // 1. Validar o corpo da resposta
-    expect(response.body).toHaveProperty('id', '1');
-    expect(response.body).toHaveProperty('email', 'david1@gmail.com');
-    expect(response.body).not.toHaveProperty('password'); // Garante que a senha não vazou
+    // --- ASSERÇÕES DE QUALIDADE ---
 
-    // 2. Validar a persistência no DB
-    const savedUser = await testPrismaClient.user.findUnique({
-      where: { id: '1' },
-    });
-    expect(savedUser).not.toBeNull();
-    // Você pode testar se a senha foi hasheada (se este for um teste de baixo nível)
+    // 3. Verifica o Corpo da Resposta (Access Token)
+    expect(response.body).toHaveProperty('accessToken');
+    expect(response.body.accessToken).toBeDefined();
+
+    // 4. Verifica o Cabeçalho da Resposta (Refresh Token Cookie)
+    // O supertest espera que o cabeçalho 'Set-Cookie' exista e tenha um valor que comece com 'refreshToken='
+    expect(response.headers['set-cookie']).toBeDefined();
+
+    // O cabeçalho 'Set-Cookie' é um array ou uma string que contém o cookie completo
+    const setCookieHeader = response.headers['set-cookie'];
+
+    // Verifica se pelo menos um dos cookies começa com "refreshToken="
+    expect(setCookieHeader).toEqual(
+      expect.arrayContaining([expect.stringContaining('refreshToken=')]),
+    );
+
+    // Opcional: Você pode verificar as flags de segurança no cookie (HttpOnly, Secure, etc.)
+    // O cookie deve conter 'HttpOnly' e 'SameSite=Strict'
+    expect(setCookieHeader).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('HttpOnly'),
+        expect.stringContaining('SameSite=Strict'),
+      ]),
+    );
   });
 
-  it('should not create user with existing email', async () => {
-    await request(app)
-      .post('/users')
-      .send({
-        name: 'David',
-        email: 'david2@gmail.com',
-        password: 'qwe123',
-      })
-      .expect(201);
-
-    await request(app)
-      .post('/users')
-      .send({
-        name: 'David',
-        email: 'david2@gmail.com', // Usando email existente
-        password: 'qwe123',
-      })
-      .expect(409);
-  });
-
-  it('should return 400 if any of the fields are not provided', async () => {
-    await request(app)
-      .post('/users')
-      .send({
-        name: 'David',
-      })
+  it('should return 400 if the user is invalid', async () => {
+    const response = await request(app)
+      .post('/login')
+      .send({ email: 'test45@test.com', password: '123456' })
       .expect(400);
+
+    expect(response.body).toHaveProperty('message');
+    expect(response.body.message).toEqual('Email ou senha inválidos.');
   });
 });
