@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { jwtSecret } from '../config/auth.config.js';
 import { IUserRepository } from '../repositories/users/user.repository.interface.js';
+import { UnauthorizedError } from '../utils/errors/app-errors.js';
 
 interface ILogin {
   email: string;
@@ -16,7 +17,7 @@ class LoginService {
     const user = await this.userRepository.findByEmail(email);
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
-      throw new Error('Email ou senha inválidos.');
+      throw new UnauthorizedError('Email ou senha inválidos.');
     }
 
     // Gera o Token de Acesso (curta duração)
