@@ -12,7 +12,7 @@ export interface AuthRequest extends Request {
 
 class UserController {
   // eslint-disable-next-line prettier/prettier
-  constructor(private userService: IUserService) { }
+  constructor(private userService: IUserService) {}
 
   createUser = async (req: Request, res: Response) => {
     try {

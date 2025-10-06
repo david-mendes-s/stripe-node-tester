@@ -3,7 +3,7 @@ import { ILoginService } from '../services/login.service.interface.js';
 
 class LoginController {
   // eslint-disable-next-line prettier/prettier
-  constructor(private loginService: ILoginService) { }
+  constructor(private loginService: ILoginService) {}
 
   async createLogin(req: Request, res: Response) {
     try {

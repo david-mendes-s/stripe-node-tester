@@ -6,7 +6,7 @@ import {
   UnauthorizedError,
 } from '../utils/errors/app-errors.js';
 
-interface AuthRequest extends Request {
+export interface AuthRequest extends Request {
   user?: { id: string; username: string }; // Tipo para o usuário decodificado
 }
 

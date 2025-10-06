@@ -6,7 +6,7 @@ import User from '../models/user.model.js';
 
 class UserService implements IUserService {
   // eslint-disable-next-line prettier/prettier
-  constructor(private userRepository: IUserRepository) { }
+  constructor(private userRepository: IUserRepository) {}
 
   async createUser({ name, email, password }: Omit<User, 'id'>) {
     const existingUser = await this.userRepository.findByEmail(email);

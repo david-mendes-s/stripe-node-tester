@@ -10,8 +10,7 @@ interface ILogin {
 }
 
 class LoginService {
-  // eslint-disable-next-line prettier/prettier
-  constructor(private userRepository: IUserRepository) { }
+  constructor(private userRepository: IUserRepository) {}
 
   async login({ email, password }: ILogin) {
     const user = await this.userRepository.findByEmail(email);

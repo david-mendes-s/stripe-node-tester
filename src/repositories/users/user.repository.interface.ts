@@ -7,8 +7,27 @@ export interface IUserRepository {
 
   findByEmail(email: string): Promise<User | null>;
 
+  findById(id: string): Promise<User | null>;
+
+  findByStripeCustomerId(customerId: string): Promise<User | null>;
+
   update(
     id: string,
     user: Partial<Omit<User, 'id'>>,
   ): Promise<UserWithoutPassword | null>;
+
+  updateStripeInfo(
+    id: string,
+    data: Partial<
+      Pick<
+        User,
+        'stripeCustomerId' | 'stripeSubscriptionId' | 'subscriptionStatus'
+      >
+    >,
+  ): Promise<void>;
+
+  updateByStripeCustomerId(
+    customerId: string,
+    data: Partial<Pick<User, 'stripeSubscriptionId' | 'subscriptionStatus'>>,
+  ): Promise<void>;
 }

@@ -3,9 +3,7 @@ import User, { UserWithoutPassword } from '../../models/user.model.js';
 import { IUserRepository } from './user.repository.interface.js';
 
 class UserRepository implements IUserRepository {
-  // eslint-disable-next-line prettier/prettier
-  constructor(private prisma: PrismaClient) { }
-
+  constructor(private prisma: PrismaClient) {}
 
   async create(user: User): Promise<User> {
     return await this.prisma.user.create({ data: user });
@@ -17,6 +15,9 @@ class UserRepository implements IUserRepository {
         id: true,
         name: true,
         email: true,
+        stripeCustomerId: true,
+        stripeSubscriptionId: true,
+        subscriptionStatus: true,
       },
     });
   }
@@ -24,6 +25,16 @@ class UserRepository implements IUserRepository {
   async findByEmail(email: string): Promise<User | null> {
     return await this.prisma.user.findUnique({
       where: { email },
+    });
+  }
+
+  async findById(id: string): Promise<User | null> {
+    return await this.prisma.user.findUnique({ where: { id } });
+  }
+
+  async findByStripeCustomerId(customerId: string): Promise<User | null> {
+    return await this.prisma.user.findUnique({
+      where: { stripeCustomerId: customerId },
     });
   }
 
@@ -43,6 +54,31 @@ class UserRepository implements IUserRepository {
       where: { id },
       data: user,
       select: { id: true, name: true, email: true },
+    });
+  }
+
+  async updateStripeInfo(
+    id: string,
+    data: Partial<
+      Pick<
+        User,
+        'stripeCustomerId' | 'stripeSubscriptionId' | 'subscriptionStatus'
+      >
+    >,
+  ): Promise<void> {
+    await this.prisma.user.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async updateByStripeCustomerId(
+    customerId: string,
+    data: Partial<Pick<User, 'stripeSubscriptionId' | 'subscriptionStatus'>>,
+  ): Promise<void> {
+    await this.prisma.user.update({
+      where: { stripeCustomerId: customerId },
+      data,
     });
   }
 }
