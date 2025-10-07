@@ -6,7 +6,6 @@ class UserRepository implements IUserRepository {
   // eslint-disable-next-line prettier/prettier
   constructor(private prisma: PrismaClient) { }
 
-
   async create(user: User): Promise<User> {
     return await this.prisma.user.create({ data: user });
   }
@@ -43,6 +42,20 @@ class UserRepository implements IUserRepository {
       where: { id },
       data: user,
       select: { id: true, name: true, email: true },
+    });
+  }
+
+  async findById(id: string): Promise<UserWithoutPassword | null> {
+    return await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        stripeCustomerId: true,
+        stripeSubscriptionId: true,
+        stripeSubscriptionStatus: true,
+      },
     });
   }
 }

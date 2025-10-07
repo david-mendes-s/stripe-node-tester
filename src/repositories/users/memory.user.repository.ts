@@ -50,6 +50,11 @@ export class InMemoryDatabase implements IUserRepository {
   clear(): void {
     this.data = [];
   }
+
+  findById(id: string): Promise<User | null> {
+    const user = this.data.find((u) => u.id === id);
+    return Promise.resolve(user || null);
+  }
 }
 
 export const db = InMemoryDatabase.getInstance();
