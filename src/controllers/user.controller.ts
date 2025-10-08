@@ -16,7 +16,18 @@ class UserController {
 
   createUser = async (req: Request, res: Response) => {
     try {
-      const { name, email, password } = req.body;
+      // 1. Desestrutura apenas os campos permitidos
+      const { name, email, password, ...rest } = req.body;
+
+      // 2. Cria um array de chaves extras (campos não permitidos)
+      const extraFields = Object.keys(rest);
+
+      // 3. Validação de campos extras
+      if (extraFields.length > 0) {
+        return res.status(400).json({
+          error: `Campos não permitidos encontrados: ${extraFields.join(', ')}. Apenas 'name', 'email' e 'password' são aceitos.`,
+        });
+      }
 
       // Validação básica de requisição (pode ser movida para um middleware)
       if (!name || !email || !password) {

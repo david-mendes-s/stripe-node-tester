@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import { IUserRepository } from '../repositories/users/user.repository.interface.js';
 import { IUserService } from './user.service.interface.js';
 import User from '../models/user.model.js';
+import { createStripeCustomer } from '../utils/stripe.js';
 
 class UserService implements IUserService {
   // eslint-disable-next-line prettier/prettier
@@ -24,7 +25,12 @@ class UserService implements IUserService {
       password: hashPassword,
     };
 
-    await this.userRepository.create(newUser);
+    const customer = await createStripeCustomer({ name, email });
+
+    await this.userRepository.create({
+      ...newUser,
+      stripeCustomerId: customer.id,
+    });
 
     return newUser;
   }
