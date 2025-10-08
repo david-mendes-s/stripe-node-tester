@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { prisma } from '../db/db.postgresql.js';
 import UserRepository from '../repositories/users/prisma.user.repositoy.js';
+import logger from '../config/logger.config.js';
 
 const userRepository = new UserRepository(prisma);
 
@@ -38,7 +39,17 @@ export const generateCheckout = async (
   name: string,
 ) => {
   try {
+    logger.info('🛒 Starting checkout session creation', {
+      userId,
+      email,
+      name,
+    });
+
     const customer = await createStripeCustomer({ name, email });
+    logger.info('✅ Stripe customer created/found', {
+      customerId: customer.id,
+      email: customer.email,
+    });
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -55,94 +66,177 @@ export const generateCheckout = async (
       ],
     });
 
+    logger.info('✅ Checkout session created successfully', {
+      sessionId: session.id,
+      userId,
+      customerId: customer.id,
+      url: session.url,
+    });
+
     return {
       url: session.url,
     };
   } catch (error) {
+    logger.error('❌ Error creating checkout session', {
+      userId,
+      email,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+
     const errorMessage =
       error instanceof Error ? error.message : 'Erro interno do servidor';
-    new Error(errorMessage);
+    throw new Error(errorMessage);
   }
 };
 
-export const handleCheckoutSessionCompleted = async (
-  event: {
-    data: { object: Stripe.Checkout.Session };
-  },
-  userId: string,
-) => {
+export const handleCheckoutSessionCompleted = async (event: {
+  data: { object: Stripe.Checkout.Session };
+}) => {
   const idUserReferenceStripe = event.data.object.client_reference_id as string;
   const stripeSubscriptionId = event.data.object.subscription as string;
   const stripeCustomerId = event.data.object.customer as string;
   const checkoutStatus = event.data.object.status;
 
-  if (checkoutStatus !== 'complete') return;
+  // Log dos dados recebidos
+  logger.info('🛒 Checkout session completed data received', {
+    idUserReferenceStripe,
+    stripeSubscriptionId,
+    stripeCustomerId,
+    checkoutStatus,
+    sessionId: event.data.object.id,
+  });
+
+  if (checkoutStatus !== 'complete') {
+    logger.warn('⚠️ Checkout status is not complete', {
+      checkoutStatus,
+      sessionId: event.data.object.id,
+    });
+    return;
+  }
 
   if (!idUserReferenceStripe || !stripeSubscriptionId || !stripeCustomerId) {
+    logger.error('❌ Missing required checkout data', {
+      idUserReferenceStripe: !!idUserReferenceStripe,
+      stripeSubscriptionId: !!stripeSubscriptionId,
+      stripeCustomerId: !!stripeCustomerId,
+    });
     throw new Error(
       'idUser, stripeSubscriptionId, stripeCustumerId is required',
     );
   }
 
+  logger.info('🔍 Looking for user by ID', { userId: idUserReferenceStripe });
   const isUserExists = await userRepository.findById(idUserReferenceStripe);
 
   if (!isUserExists) {
+    logger.error('❌ User not found', { userId: idUserReferenceStripe });
     throw new Error('User not found');
   }
 
-  if (idUserReferenceStripe !== userId) {
-    throw new Error('This user does not have permission to change the plan');
-  }
+  logger.info('✅ User found, updating checkout data', {
+    userId: idUserReferenceStripe,
+    stripeCustomerId,
+    stripeSubscriptionId,
+  });
 
-  await userRepository.updateCheckoutSessionCompleted(userId, {
+  // Usar o ID do client_reference_id, não do JWT
+  await userRepository.updateCheckoutSessionCompleted(idUserReferenceStripe, {
+    stripeCustomerId,
+    stripeSubscriptionId,
+  });
+
+  logger.info('✅ User updated successfully with checkout data', {
+    userId: idUserReferenceStripe,
     stripeCustomerId,
     stripeSubscriptionId,
   });
 };
 
-export const handleSubscriptionSessionCompleted = async (
-  event: {
-    data: { object: Stripe.Subscription };
-  },
-  userId: string,
-) => {
+export const handleSubscriptionSessionCompleted = async (event: {
+  data: { object: Stripe.Subscription };
+}) => {
   const subscriptionStatus = event.data.object.status;
   const stripeCustumerId = event.data.object.customer as string;
   const stripeSubscriptionId = event.data.object.id as string;
 
-  const user = userRepository.findById(userId);
+  // Log dos dados recebidos
+  logger.info('📋 Subscription event data received', {
+    subscriptionStatus,
+    stripeCustumerId,
+    stripeSubscriptionId,
+  });
+
+  // Buscar usuário pelo customer ID
+  logger.info('🔍 Looking for user by Stripe customer ID', {
+    stripeCustumerId,
+  });
+  const user = await userRepository.findByStripeCustomerId(stripeCustumerId);
 
   if (!user) {
+    logger.error('❌ User not found by Stripe customer ID', {
+      stripeCustumerId,
+    });
     throw new Error('User not found');
   }
 
+  logger.info('✅ User found, updating subscription data', {
+    userId: user.id,
+    subscriptionStatus,
+    stripeSubscriptionId,
+    stripeCustumerId,
+  });
+
   await userRepository.updateSubscriptionSessionCompleted(
-    userId,
+    user.id,
     subscriptionStatus,
     stripeSubscriptionId,
     stripeCustumerId,
   );
+
+  logger.info('✅ User subscription updated successfully', {
+    userId: user.id,
+    subscriptionStatus,
+    stripeSubscriptionId,
+    stripeCustumerId,
+  });
 };
 
-export const handleCancelPlan = async (
-  event: {
-    data: { object: Stripe.Subscription };
-  },
-  userId: string,
-) => {
+export const handleCancelPlan = async (event: {
+  data: { object: Stripe.Subscription };
+}) => {
   const stripeCustumerId = event.data.object.customer as string;
 
-  const user = await userRepository.findById(userId);
+  // Log dos dados recebidos
+  logger.info('🗑️ Subscription cancellation data received', {
+    stripeCustumerId,
+    subscriptionId: event.data.object.id,
+  });
+
+  // Buscar usuário pelo customer ID
+  logger.info('🔍 Looking for user by Stripe customer ID for cancellation', {
+    stripeCustumerId,
+  });
+  const user = await userRepository.findByStripeCustomerId(stripeCustumerId);
 
   if (!user) {
+    logger.error('❌ User not found for cancellation', {
+      stripeCustumerId,
+    });
     throw new Error('User not found');
   }
 
-  if (stripeCustumerId !== user.stripeCustomerId) {
-    throw new Error('This user does not have permission to cancel the plan');
-  }
+  logger.info('✅ User found, cancelling subscription', {
+    userId: user.id,
+    stripeCustumerId,
+  });
 
-  await userRepository.updateCancelPlan(userId, stripeCustumerId);
+  await userRepository.updateCancelPlan(user.id, stripeCustumerId);
+
+  logger.info('✅ User subscription cancelled successfully', {
+    userId: user.id,
+    stripeCustumerId,
+  });
 };
 
 export const handleCancelSubscription = async (idSubscriptions: string) => {
