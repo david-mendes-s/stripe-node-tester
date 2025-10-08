@@ -1,4 +1,8 @@
 import Stripe from 'stripe';
+import { prisma } from '../db/db.postgresql.js';
+import UserRepository from '../repositories/users/prisma.user.repositoy.js';
+
+const userRepository = new UserRepository(prisma);
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
   httpClient: Stripe.createFetchHttpClient(),
@@ -59,4 +63,101 @@ export const generateCheckout = async (
       error instanceof Error ? error.message : 'Erro interno do servidor';
     new Error(errorMessage);
   }
+};
+
+export const handleCheckoutSessionCompleted = async (
+  event: {
+    data: { object: Stripe.Checkout.Session };
+  },
+  userId: string,
+) => {
+  const idUserReferenceStripe = event.data.object.client_reference_id as string;
+  const stripeSubscriptionId = event.data.object.subscription as string;
+  const stripeCustomerId = event.data.object.customer as string;
+  const checkoutStatus = event.data.object.status;
+
+  if (checkoutStatus !== 'complete') return;
+
+  if (!idUserReferenceStripe || !stripeSubscriptionId || !stripeCustomerId) {
+    throw new Error(
+      'idUser, stripeSubscriptionId, stripeCustumerId is required',
+    );
+  }
+
+  const isUserExists = await userRepository.findById(idUserReferenceStripe);
+
+  if (!isUserExists) {
+    throw new Error('User not found');
+  }
+
+  if (idUserReferenceStripe !== userId) {
+    throw new Error('This user does not have permission to change the plan');
+  }
+
+  await userRepository.updateCheckoutSessionCompleted(userId, {
+    stripeCustomerId,
+    stripeSubscriptionId,
+  });
+};
+
+export const handleSubscriptionSessionCompleted = async (
+  event: {
+    data: { object: Stripe.Subscription };
+  },
+  userId: string,
+) => {
+  const subscriptionStatus = event.data.object.status;
+  const stripeCustumerId = event.data.object.customer as string;
+  const stripeSubscriptionId = event.data.object.id as string;
+
+  const user = userRepository.findById(userId);
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  await userRepository.updateSubscriptionSessionCompleted(
+    userId,
+    subscriptionStatus,
+    stripeSubscriptionId,
+    stripeCustumerId,
+  );
+};
+
+export const handleCancelPlan = async (
+  event: {
+    data: { object: Stripe.Subscription };
+  },
+  userId: string,
+) => {
+  const stripeCustumerId = event.data.object.customer as string;
+
+  const user = await userRepository.findById(userId);
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  if (stripeCustumerId !== user.stripeCustomerId) {
+    throw new Error('This user does not have permission to cancel the plan');
+  }
+
+  await userRepository.updateCancelPlan(userId, stripeCustumerId);
+};
+
+export const handleCancelSubscription = async (idSubscriptions: string) => {
+  const subscription = await stripe.subscriptions.update(idSubscriptions, {
+    cancel_at_period_end: true,
+  });
+
+  return subscription;
+};
+
+export const createPortalCustomer = async (idCustomer: string) => {
+  const subscription = await stripe.billingPortal.sessions.create({
+    customer: idCustomer,
+    return_url: process.env.FRONTEND_URL,
+  });
+
+  return subscription;
 };
