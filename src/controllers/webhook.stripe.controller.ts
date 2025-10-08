@@ -1,17 +1,15 @@
+import logger from '../config/logger.config.js';
 import {
   stripe,
   handleCheckoutSessionCompleted,
   handleSubscriptionSessionCompleted,
   handleCancelPlan,
 } from '../utils/stripe.js';
-import { Response } from 'express';
-import { AuthRequest } from './user.controller.js';
+import { Response, Request } from 'express';
 
 class WebhookController {
-  async webhook(req: AuthRequest, res: Response): Promise<Response | void> {
+  async webhook(req: Request, res: Response): Promise<Response | void> {
     const signature = req.headers['stripe-signature'] as string;
-
-    const userId = req.user.id;
 
     let event;
 
@@ -29,18 +27,21 @@ class WebhookController {
 
     switch (event.type) {
       case 'checkout.session.completed':
-        await handleCheckoutSessionCompleted(event, userId);
+        await handleCheckoutSessionCompleted(event);
         break;
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
-        await handleSubscriptionSessionCompleted(event, userId);
+        await handleSubscriptionSessionCompleted(event);
         break;
       case 'customer.subscription.deleted':
-        await handleCancelPlan(event, userId);
+        await handleCancelPlan(event);
         break;
 
       default:
-        console.log(`Unhandled event type ${event.type}`);
+        logger.info(`ℹ️ Unhandled event type: ${event.type}`, {
+          eventId: event.id,
+          eventType: event.type,
+        });
     }
 
     res.send();

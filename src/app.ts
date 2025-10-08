@@ -5,6 +5,8 @@ import { errorHandler } from './middleware/error-handler.js';
 import { requestLogger } from './middleware/request-logger.js';
 import webHookRouter from './routes/webhooks.router.js';
 
+/* stripe listen --forward-to localhost:3000/webhook */
+
 export const app = express();
 
 app.use('/webhook', webHookRouter);

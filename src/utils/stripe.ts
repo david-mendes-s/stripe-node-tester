@@ -65,12 +65,9 @@ export const generateCheckout = async (
   }
 };
 
-export const handleCheckoutSessionCompleted = async (
-  event: {
-    data: { object: Stripe.Checkout.Session };
-  },
-  userId: string,
-) => {
+export const handleCheckoutSessionCompleted = async (event: {
+  data: { object: Stripe.Checkout.Session };
+}) => {
   const idUserReferenceStripe = event.data.object.client_reference_id as string;
   const stripeSubscriptionId = event.data.object.subscription as string;
   const stripeCustomerId = event.data.object.customer as string;
@@ -90,49 +87,38 @@ export const handleCheckoutSessionCompleted = async (
     throw new Error('User not found');
   }
 
-  if (idUserReferenceStripe !== userId) {
-    throw new Error('This user does not have permission to change the plan');
-  }
-
-  await userRepository.updateCheckoutSessionCompleted(userId, {
+  await userRepository.updateCheckoutSessionCompleted(idUserReferenceStripe, {
     stripeCustomerId,
     stripeSubscriptionId,
   });
 };
 
-export const handleSubscriptionSessionCompleted = async (
-  event: {
-    data: { object: Stripe.Subscription };
-  },
-  userId: string,
-) => {
+export const handleSubscriptionSessionCompleted = async (event: {
+  data: { object: Stripe.Subscription };
+}) => {
   const subscriptionStatus = event.data.object.status;
   const stripeCustumerId = event.data.object.customer as string;
   const stripeSubscriptionId = event.data.object.id as string;
 
-  const user = userRepository.findById(userId);
+  const user = userRepository.findByStripeCustomerId(stripeCustumerId);
 
   if (!user) {
     throw new Error('User not found');
   }
 
   await userRepository.updateSubscriptionSessionCompleted(
-    userId,
     subscriptionStatus,
     stripeSubscriptionId,
     stripeCustumerId,
   );
 };
 
-export const handleCancelPlan = async (
-  event: {
-    data: { object: Stripe.Subscription };
-  },
-  userId: string,
-) => {
+export const handleCancelPlan = async (event: {
+  data: { object: Stripe.Subscription };
+}) => {
   const stripeCustumerId = event.data.object.customer as string;
 
-  const user = await userRepository.findById(userId);
+  const user = await userRepository.findByStripeCustomerId(stripeCustumerId);
 
   if (!user) {
     throw new Error('User not found');
@@ -142,7 +128,7 @@ export const handleCancelPlan = async (
     throw new Error('This user does not have permission to cancel the plan');
   }
 
-  await userRepository.updateCancelPlan(userId, stripeCustumerId);
+  await userRepository.updateCancelPlan(stripeCustumerId);
 };
 
 export const handleCancelSubscription = async (idSubscriptions: string) => {

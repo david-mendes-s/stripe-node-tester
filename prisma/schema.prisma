@@ -20,6 +20,6 @@ model User {
   password String
 
   stripeSubscriptionStatus String?
-  stripeCustomerId         String?
+  stripeCustomerId         String? @unique
   stripeSubscriptionId     String?
 }

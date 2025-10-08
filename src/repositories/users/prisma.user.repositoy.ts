@@ -89,13 +89,12 @@ class UserRepository implements IUserRepository {
   }
 
   async updateSubscriptionSessionCompleted(
-    userId: string,
     subscriptionStatus: string,
     subscriptionId: string,
     stripeCustumerId: string,
   ): Promise<void> {
     const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+      where: { stripeCustomerId: stripeCustumerId },
     });
 
     if (!user) {
@@ -103,7 +102,7 @@ class UserRepository implements IUserRepository {
     }
 
     await this.prisma.user.update({
-      where: { id: userId },
+      where: { id: user.id },
       data: {
         stripeSubscriptionStatus: subscriptionStatus,
         stripeSubscriptionId: subscriptionId,
@@ -112,12 +111,9 @@ class UserRepository implements IUserRepository {
     });
   }
 
-  async updateCancelPlan(
-    userId: string,
-    stripeCustomerId: string,
-  ): Promise<void> {
+  async updateCancelPlan(stripeCustumerId: string): Promise<void> {
     const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+      where: { stripeCustomerId: stripeCustumerId },
     });
 
     if (!user) {
@@ -125,10 +121,26 @@ class UserRepository implements IUserRepository {
     }
 
     await this.prisma.user.update({
-      where: { id: userId },
+      where: { id: user.id },
       data: {
-        stripeCustomerId: stripeCustomerId,
+        stripeCustomerId: stripeCustumerId,
         stripeSubscriptionStatus: null,
+      },
+    });
+  }
+
+  async findByStripeCustomerId(
+    stripeCustomerId: string,
+  ): Promise<UserWithoutPassword | null> {
+    return await this.prisma.user.findUnique({
+      where: { stripeCustomerId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        stripeCustomerId: true,
+        stripeSubscriptionId: true,
+        stripeSubscriptionStatus: true,
       },
     });
   }
